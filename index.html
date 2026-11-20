@@ -1,321 +1,1071 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BAZA CEIDG</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: { 
-                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'], } 
-                }
-            }
-        }
-    </script>
-    <style>
-        body {
-            background-color: #f0f4f8;
-            background-image: 
-                radial-gradient(at 0% 0%, hsla(217,100%,94%,1) 0, transparent 50%), 
-                radial-gradient(at 100% 0%, hsla(253,100%,94%,1) 0, transparent 50%), 
-                radial-gradient(at 100% 100%, hsla(217,100%,91%,1) 0, transparent 50%), 
-                radial-gradient(at 0% 100%, hsla(213,100%,95%,1) 0, transparent 50%);
-            background-attachment: fixed;
-        }
-        
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-up {
-            animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BAZA CEIDG — Weryfikacja Podmiotów VAT</title>
+  <!-- Load Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Load Inter and JetBrains Mono fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
 
-        .glass-card {
-            background: rgba(255, 255, 255, 0.75);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-        }
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+            mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+          },
+          colors: {
+            pepco: {
+              blue: '#0078E3',
+              blueDark: '#0059AB',
+              purple: '#6B2FB3',
+              magenta: '#C81E78',
+              magentaDark: '#9D135B',
+              surface: '#F4F8FD',
+              border: '#D6E6F8',
+            },
+          },
+          boxShadow: {
+            card: '0 22px 48px -18px rgba(15, 23, 42, 0.24)',
+            cta: '0 12px 26px -8px rgba(0, 120, 227, 0.45), 0 8px 20px -10px rgba(200, 30, 120, 0.36)',
+          },
+        },
+      },
+    };
+  </script>
 
-        body.no-scroll { overflow: hidden; }
-    </style>
+  <style>
+    /* Pepco science-blue (#0078E3) to violet (#6B2FB3) to vivid magenta (#C81E78) backdrop */
+    .pepco-gradient-bg {
+      background: linear-gradient(
+        110deg,
+        #0078E3 0%,
+        #006CD2 62%,
+        #5238B6 84%,
+        #A61D7B 95%,
+        #C81E78 100%
+      );
+    }
+
+    /* Pepco accent bar and primary action gradient */
+    .pepco-gradient-accent {
+      background: linear-gradient(
+        90deg,
+        #0078E3 0%,
+        #285EC6 55%,
+        #8B269A 85%,
+        #C81E78 100%
+      );
+    }
+
+    /* Translucent glass surface for cards */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.75);
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-fade-up {
+      animation: fadeUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    body.no-scroll {
+      overflow: hidden;
+    }
+  </style>
 </head>
-<body class="min-h-screen antialiased text-slate-800 transition-colors duration-300">
+<body class="pepco-gradient-bg min-h-screen antialiased text-slate-900 selection:bg-pepco-magenta selection:text-white flex flex-col">
 
-    <!-- ========================================== -->
-    <!-- OVERLAY ŁADOWANIA -->
-    <!-- ========================================== -->
-    <div id="fullScreenLoader" class="hidden fixed inset-0 z-50 flex-col items-center justify-center bg-slate-900/40 backdrop-blur-md transition-opacity duration-300">
-        <div class="relative flex justify-center items-center mb-6">
-            <div class="absolute inline-flex h-20 w-20 rounded-full border-4 border-blue-400 opacity-20 animate-ping"></div>
-            <div class="absolute inline-flex h-16 w-16 rounded-full border-4 border-t-blue-500 border-r-transparent border-b-indigo-500 border-l-transparent animate-spin"></div>
-            <div class="inline-flex h-10 w-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 animate-pulse shadow-lg shadow-blue-500/50"></div>
-        </div>
-        <h3 class="text-2xl font-bold text-white tracking-wide shadow-black/50 drop-shadow-md">
-            Autoryzacja...
-        </h3>
-        <p class="text-blue-100 font-medium mt-2 animate-pulse drop-shadow-md">
-            Proszę czekać, pobieram dane z bazy KAS
-        </p>
+  <!-- FULLSCREEN LOADING OVERLAY -->
+  <div
+    id="fullScreenLoader"
+    role="status"
+    aria-live="polite"
+    class="hidden fixed inset-0 z-50 flex-col items-center justify-center bg-slate-950/55 backdrop-blur-md transition-opacity duration-300 px-4 text-center"
+  >
+    <div class="relative flex justify-center items-center mb-6">
+      <div class="absolute inline-flex h-24 w-24 rounded-full border-4 border-white/25 animate-ping"></div>
+      <div class="absolute inline-flex h-16 w-16 rounded-full border-4 border-t-white border-r-transparent border-b-pink-300 border-l-transparent animate-spin"></div>
+      <div class="inline-flex h-11 w-11 rounded-full pepco-gradient-accent shadow-xl ring-2 ring-white/70"></div>
     </div>
-    <!-- ========================================== -->
+    <h3 class="text-2xl font-extrabold text-white tracking-tight drop-shadow">
+      Autoryzacja i zapytanie...
+    </h3>
+    <p class="text-white/90 font-medium mt-2 max-w-md drop-shadow">
+      Trwa pobieranie aktualnych danych z wykazu podatników VAT (KAS / MF)
+    </p>
+  </div>
 
-    <div class="max-w-5xl mx-auto pt-16 pb-20 px-5 relative z-10">
-        
-        <!-- NAGŁÓWEK (Poprawione pozycjonowanie i wysokość tekstu) -->
-        <header class="text-center mb-14 relative z-10">
-            <div class="inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-xs font-extrabold text-indigo-700 mb-5 shadow-sm border border-indigo-100 uppercase tracking-widest backdrop-blur-sm">
-                <span class="relative flex h-2.5 w-2.5">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-indigo-500"></span>
-                </span>
-                Live API Connection
+  <!-- MAIN CONTAINER -->
+  <div class="max-w-5xl w-full mx-auto pt-10 sm:pt-14 pb-20 px-4 sm:px-6 relative z-10 flex-1">
+
+    <!-- HEADER WITH GEOMETRIC LINE-ART EMBLEM -->
+    <header class="text-center mb-10 sm:mb-12 relative">
+      <div class="inline-flex items-center gap-2 rounded-full bg-white/95 px-4 py-2 text-xs font-extrabold text-pepco-blueDark mb-5 shadow-md border border-white uppercase tracking-widest">
+        <span class="relative flex h-2.5 w-2.5">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-pepco-magenta opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-pepco-magenta"></span>
+        </span>
+        Biała Lista Podatników VAT • Live API
+      </div>
+
+      <div class="flex items-center justify-center gap-3.5 mb-3">
+        <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white/15 border-2 border-white/85 flex items-center justify-center shadow-lg shrink-0 backdrop-blur-sm">
+          <!-- Clean geometric emblem outline -->
+          <svg class="w-7 h-7 sm:w-8 sm:h-8 text-white" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="4" y="4" width="24" height="24" rx="7" />
+            <circle cx="16" cy="16" r="6.5" />
+            <path d="M16 4v5.5M16 22.5V28M4 16h5.5M22.5 16H28" />
+          </svg>
+        </div>
+        <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white drop-shadow-sm">
+          BAZA CEIDG &amp; VAT
+        </h1>
+      </div>
+
+      <p class="text-white/95 max-w-2xl mx-auto font-medium text-base sm:text-lg leading-relaxed drop-shadow-xs">
+        Szybka i bezpłatna weryfikacja podmiotów w wykazie <span class="font-bold underline decoration-white/60 underline-offset-4">Białej Listy Podatników VAT</span> po numerze NIP lub REGON.
+      </p>
+    </header>
+
+    <!-- SEARCH PANEL -->
+    <section aria-label="Wyszukiwarka podmiotów" class="glass-card p-6 sm:p-8 rounded-3xl shadow-card mb-8 relative overflow-hidden">
+      <div class="h-1.5 w-full pepco-gradient-accent absolute top-0 left-0 right-0"></div>
+
+      <form id="searchForm" class="relative z-10 space-y-5 pt-1" novalidate>
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-5">
+          <!-- Criterion selector -->
+          <div class="md:col-span-4">
+            <label for="searchType" class="block text-xs font-extrabold text-slate-600 uppercase tracking-wider mb-2 ml-1">
+              Kryterium wyszukiwania
+            </label>
+            <select
+              id="searchType"
+              class="w-full bg-white text-slate-900 font-bold rounded-2xl p-4 border border-pepco-border shadow-xs focus:outline-none focus:border-pepco-blue focus:ring-4 focus:ring-pepco-blue/20 disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer hover:border-pepco-blue/60"
+            >
+              <option value="nip">Numer NIP (10 cyfr)</option>
+              <option value="regon">Numer REGON (9 lub 14 cyfr)</option>
+            </select>
+          </div>
+
+          <!-- Identifier input -->
+          <div class="md:col-span-8">
+            <div class="flex items-center justify-between gap-2 mb-2 ml-1">
+              <label for="searchQuery" class="block text-xs font-extrabold text-slate-600 uppercase tracking-wider">
+                Identyfikator podmiotu
+              </label>
+              <span id="digitCounter" class="text-xs font-mono font-semibold text-pepco-blueDark">
+                0 / 10 cyfr
+              </span>
             </div>
-            
-            <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-blue-800 to-indigo-900 mb-4 pb-2 leading-tight">
-                Portal Weryfikacji Podmiotów
-            </h1>
-            
-            <p class="text-slate-600 max-w-2xl mx-auto font-medium text-lg">
-                Oficjalne i darmowe zapytania do <span class="text-blue-700 font-bold">Białej Listy Podatników VAT</span>.
+
+            <div class="relative flex items-center">
+              <input
+                type="text"
+                id="searchQuery"
+                inputmode="numeric"
+                autocomplete="off"
+                placeholder="np. 525-000-10-09"
+                class="w-full bg-white text-slate-900 font-mono font-bold text-lg sm:text-xl rounded-2xl p-4 pr-12 border border-pepco-border shadow-xs focus:outline-none focus:border-pepco-blue focus:ring-4 focus:ring-pepco-blue/20 disabled:opacity-50 disabled:cursor-not-allowed placeholder:font-sans placeholder:font-normal placeholder:text-slate-400 hover:border-pepco-blue/60 transition"
+              />
+              <button
+                type="button"
+                id="clearQueryBtn"
+                title="Wyczyść pole"
+                aria-label="Wyczyść pole identyfikatora"
+                class="hidden absolute right-3.5 p-2 rounded-xl text-slate-400 hover:text-pepco-magentaDark hover:bg-fuchsia-50 focus:outline-none focus:ring-2 focus:ring-pepco-magenta/40 transition cursor-pointer"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <!-- Dynamic validation & format hint -->
+            <p id="validationHint" role="status" aria-live="polite" class="text-xs font-medium text-slate-600 mt-2 ml-1">
+              Wpisz 10 cyfr numeru NIP — format XXX-XXX-XX-XX zostanie nadany automatycznie.
             </p>
-        </header>
-
-        <!-- PANEL WYSZUKIWANIA -->
-        <div class="glass-card p-8 rounded-3xl shadow-xl shadow-indigo-100/50 mb-12 relative overflow-hidden">
-            <div class="absolute -top-16 -right-16 w-48 h-48 bg-gradient-to-bl from-blue-100 to-transparent rounded-full opacity-60"></div>
-            
-            <form id="searchForm" class="relative z-10 space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
-                    <div class="md:col-span-4">
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Kryterium</label>
-                        <select id="searchType" class="w-full border-0 bg-white shadow-sm ring-1 ring-slate-200 rounded-2xl p-4 focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow font-semibold text-slate-700 cursor-pointer hover:ring-slate-300">
-                            <option value="nip">Numer NIP</option>
-                            <option value="regon">Numer REGON</option>
-                        </select>
-                    </div>
-                    
-                    <div class="md:col-span-8">
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Identyfikator</label>
-                        <div class="relative">
-                            <input type="text" id="searchQuery" placeholder="Wprowadź ciąg cyfr..." required 
-                               class="w-full border-0 bg-white shadow-sm ring-1 ring-slate-200 rounded-2xl p-4 pl-5 focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow text-slate-900 font-bold text-lg placeholder:font-normal placeholder:text-slate-400 hover:ring-slate-300">
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="flex justify-end pt-2">
-                    <button type="submit" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-4 px-10 rounded-2xl shadow-lg shadow-indigo-500/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/40 w-full md:w-auto flex justify-center items-center gap-3 cursor-pointer">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                        Wyszukaj w bazie
-                    </button>
-                </div>
-            </form>
+          </div>
         </div>
 
-        <!-- POJEMNIK NA WYNIKI -->
-        <div id="resultsContainer" class="hidden">
-            <div id="resultsContent" class="hidden animate-fade-up"></div>
-        </div>
-    </div>
+        <!-- Sample quick-fill buttons & submit CTA -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2 border-t border-slate-200/80">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-xs font-bold text-slate-500 mr-1">Przykłady testowe:</span>
+            <button
+              type="button"
+              data-sample-type="nip"
+              data-sample-value="5250001009"
+              class="sample-btn px-3 py-1.5 rounded-xl text-xs font-mono font-semibold bg-pepco-surface hover:bg-pepco-border text-pepco-blueDark border border-pepco-border focus:outline-none focus:ring-2 focus:ring-pepco-blue/40 transition cursor-pointer"
+            >
+              NIP: 525-000-10-09
+            </button>
+            <button
+              type="button"
+              data-sample-type="nip"
+              data-sample-value="5261040828"
+              class="sample-btn px-3 py-1.5 rounded-xl text-xs font-mono font-semibold bg-pepco-surface hover:bg-pepco-border text-pepco-blueDark border border-pepco-border focus:outline-none focus:ring-2 focus:ring-pepco-blue/40 transition cursor-pointer"
+            >
+              NIP: 526-104-08-28
+            </button>
+            <button
+              type="button"
+              data-sample-type="regon"
+              data-sample-value="010058960"
+              class="sample-btn px-3 py-1.5 rounded-xl text-xs font-mono font-semibold bg-fuchsia-50 hover:bg-fuchsia-100 text-pepco-magentaDark border border-pepco-magenta/25 focus:outline-none focus:ring-2 focus:ring-pepco-magenta/40 transition cursor-pointer"
+            >
+              REGON: 010058960
+            </button>
+          </div>
 
-    <script>
-        // Funkcja formatująca numer rachunku na format: xx xxxx xxxx xxxx xxxx xxxx xxxx
-        function formatBankAccount(accountStr) {
-            const clean = accountStr.replace(/\D/g, ''); // zostaw same cyfry
-            if (clean.length === 26) {
-                return `${clean.slice(0,2)} ${clean.slice(2,6)} ${clean.slice(6,10)} ${clean.slice(10,14)} ${clean.slice(14,18)} ${clean.slice(18,22)} ${clean.slice(22,26)}`;
-            }
-            return accountStr; // jeśli długość jest inna, zwróć oryginał
+          <button
+            type="submit"
+            id="submitBtn"
+            class="pepco-gradient-accent hover:opacity-95 active:scale-[0.99] text-white font-extrabold py-4 px-8 rounded-2xl shadow-cta transition-all duration-200 hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-pepco-blue/35 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none w-full sm:w-auto flex justify-center items-center gap-2.5 cursor-pointer shrink-0"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            Wyszukaj w bazie
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- RECENT SEARCHES HISTORY -->
+    <section id="historySection" aria-label="Ostatnie wyszukiwania" class="hidden glass-card p-5 sm:p-6 rounded-3xl shadow-lg mb-8 animate-fade-up">
+      <div class="flex items-center justify-between gap-3 mb-3.5">
+        <h2 class="text-xs font-extrabold uppercase tracking-widest text-pepco-blueDark flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-pepco-magenta"></span>
+          Ostatnie wyszukiwania
+        </h2>
+        <button
+          type="button"
+          id="clearHistoryBtn"
+          class="text-xs font-bold text-pepco-magentaDark hover:text-pepco-magenta hover:underline focus:outline-none focus:ring-2 focus:ring-pepco-magenta/40 rounded-lg px-2 py-1 transition cursor-pointer"
+        >
+          Wyczyść historię
+        </button>
+      </div>
+      <div id="historyList" class="flex flex-wrap gap-2.5"></div>
+    </section>
+
+    <!-- RESULTS CONTAINER -->
+    <section id="resultsContainer" aria-live="polite" class="hidden">
+      <div id="resultsContent" class="hidden animate-fade-up"></div>
+    </section>
+
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'pepco_ceidg_vat_history_v1';
+    const MAX_HISTORY_ITEMS = 8;
+
+    const searchForm = document.getElementById('searchForm');
+    const searchTypeEl = document.getElementById('searchType');
+    const searchQueryEl = document.getElementById('searchQuery');
+    const clearQueryBtn = document.getElementById('clearQueryBtn');
+    const digitCounterEl = document.getElementById('digitCounter');
+    const validationHintEl = document.getElementById('validationHint');
+    const submitBtn = document.getElementById('submitBtn');
+    const overlay = document.getElementById('fullScreenLoader');
+    const resultsContainer = document.getElementById('resultsContainer');
+    const resultsContent = document.getElementById('resultsContent');
+    const historySection = document.getElementById('historySection');
+    const historyListEl = document.getElementById('historyList');
+    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+
+    // Format 10-digit NIP as XXX-XXX-XX-XX for display; keep REGON as clean digits
+    function formatIdentifierForDisplay(rawValue, type) {
+      const digits = String(rawValue || '').replace(/\D/g, '');
+      if (type === 'nip') {
+        const d = digits.slice(0, 10);
+        if (d.length <= 3) return d;
+        if (d.length <= 6) return `${d.slice(0, 3)}-${d.slice(3)}`;
+        if (d.length <= 8) return `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}`;
+        return `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6, 8)}-${d.slice(8, 10)}`;
+      }
+      return digits.slice(0, 14);
+    }
+
+    // Format 26-digit bank account as xx xxxx xxxx xxxx xxxx xxxx xxxx
+    function formatBankAccount(accountStr) {
+      const clean = String(accountStr || '').replace(/\D/g, '');
+      if (clean.length === 26) {
+        return `${clean.slice(0, 2)} ${clean.slice(2, 6)} ${clean.slice(6, 10)} ${clean.slice(10, 14)} ${clean.slice(14, 18)} ${clean.slice(18, 22)} ${clean.slice(22, 26)}`;
+      }
+      return String(accountStr || '');
+    }
+
+    // Validate NIP or REGON digit length and return { valid, message, level }
+    function validateIdentifier(digits, type) {
+      if (type === 'nip') {
+        if (digits.length === 0) {
+          return {
+            valid: false,
+            level: 'neutral',
+            message: 'Wpisz 10 cyfr numeru NIP — format XXX-XXX-XX-XX zostanie nadany automatycznie.',
+          };
+        }
+        if (digits.length < 10) {
+          return {
+            valid: false,
+            level: 'warning',
+            message: `Wprowadzono ${digits.length} z 10 cyfr numeru NIP (pozostało ${10 - digits.length}).`,
+          };
+        }
+        if (digits.length > 10) {
+          return {
+            valid: false,
+            level: 'error',
+            message: 'Numer NIP powinien składać się z dokładnie 10 cyfr.',
+          };
+        }
+        return {
+          valid: true,
+          level: 'success',
+          message: 'Poprawna długość numeru NIP (10 cyfr). Gotowe do wyszukania.',
+        };
+      }
+
+      // REGON: 9 or 14 digits
+      if (digits.length === 0) {
+        return {
+          valid: false,
+          level: 'neutral',
+          message: 'Wpisz 9 cyfr (REGON podstawowy) lub 14 cyfr (REGON jednostek lokalnych).',
+        };
+      }
+      if (digits.length === 9 || digits.length === 14) {
+        return {
+          valid: true,
+          level: 'success',
+          message: `Poprawna długość numeru REGON (${digits.length} cyfr). Gotowe do wyszukania.`,
+        };
+      }
+      if (digits.length < 9) {
+        return {
+          valid: false,
+          level: 'warning',
+          message: `Wprowadzono ${digits.length} cyfr — wymagane jest 9 lub 14 cyfr REGON.`,
+        };
+      }
+      if (digits.length > 9 && digits.length < 14) {
+        return {
+          valid: false,
+          level: 'warning',
+          message: `Wprowadzono ${digits.length} cyfr — dla REGON 14-cyfrowego brakuje ${14 - digits.length} cyfr.`,
+        };
+      }
+      return {
+        valid: false,
+        level: 'error',
+        message: 'Numer REGON może mieć wyłącznie 9 lub 14 cyfr.',
+      };
+    }
+
+    // Update counter, clear button, and validation hint live
+    function updateInputState() {
+      const type = searchTypeEl.value;
+      const digits = searchQueryEl.value.replace(/\D/g, '');
+      const formatted = formatIdentifierForDisplay(digits, type);
+
+      if (searchQueryEl.value !== formatted) {
+        searchQueryEl.value = formatted;
+      }
+
+      clearQueryBtn.classList.toggle('hidden', digits.length === 0);
+
+      if (type === 'nip') {
+        digitCounterEl.textContent = `${Math.min(digits.length, 10)} / 10 cyfr`;
+      } else {
+        const targetLen = digits.length > 9 ? 14 : 9;
+        digitCounterEl.textContent = `${digits.length} / ${targetLen} cyfr`;
+      }
+
+      const status = validateIdentifier(digits, type);
+      validationHintEl.textContent = status.message;
+      validationHintEl.className = 'text-xs font-semibold mt-2 ml-1 ';
+
+      if (status.level === 'success') {
+        validationHintEl.className += 'text-emerald-700';
+        digitCounterEl.className = 'text-xs font-mono font-bold text-emerald-700';
+      } else if (status.level === 'error') {
+        validationHintEl.className += 'text-pepco-magentaDark';
+        digitCounterEl.className = 'text-xs font-mono font-bold text-pepco-magentaDark';
+      } else if (status.level === 'warning') {
+        validationHintEl.className += 'text-amber-700';
+        digitCounterEl.className = 'text-xs font-mono font-bold text-amber-700';
+      } else {
+        validationHintEl.className += 'text-slate-600';
+        digitCounterEl.className = 'text-xs font-mono font-semibold text-pepco-blueDark';
+      }
+    }
+
+    // Copy text helper using clipboard API with execCommand fallback
+    async function copyTextToClipboard(text) {
+      const cleanText = String(text || '').trim();
+      if (!cleanText) return false;
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(cleanText);
+          return true;
+        }
+      } catch (_) {
+        // Fallback below
+      }
+
+      try {
+        const textarea = document.createElement('textarea');
+        textarea.value = cleanText;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.select();
+        const ok = document.execCommand('copy');
+        document.body.removeChild(textarea);
+        return Boolean(ok);
+      } catch (_) {
+        return false;
+      }
+    }
+
+    // Create a clean one-click copy button with visual feedback
+    function createCopyButton(valueToCopy, labelText = 'Kopiuj', compact = false) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = compact
+        ? 'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-pepco-surface hover:bg-pepco-border text-pepco-blueDark border border-pepco-border focus:outline-none focus:ring-2 focus:ring-pepco-blue/40 transition cursor-pointer shrink-0'
+        : 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-pepco-surface hover:bg-pepco-border text-pepco-blueDark border border-pepco-border focus:outline-none focus:ring-2 focus:ring-pepco-blue/40 transition cursor-pointer shrink-0';
+
+      const iconSpan = document.createElement('span');
+      iconSpan.textContent = '📋';
+
+      const textSpan = document.createElement('span');
+      textSpan.textContent = labelText;
+
+      btn.appendChild(iconSpan);
+      btn.appendChild(textSpan);
+
+      btn.addEventListener('click', async (event) => {
+        event.stopPropagation();
+        const copied = await copyTextToClipboard(valueToCopy);
+        if (copied) {
+          iconSpan.textContent = '✓';
+          textSpan.textContent = 'Skopiowano';
+          btn.className = compact
+            ? 'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 text-white border border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition cursor-pointer shrink-0'
+            : 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 text-white border border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition cursor-pointer shrink-0';
+
+          setTimeout(() => {
+            iconSpan.textContent = '📋';
+            textSpan.textContent = labelText;
+            btn.className = compact
+              ? 'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-pepco-surface hover:bg-pepco-border text-pepco-blueDark border border-pepco-border focus:outline-none focus:ring-2 focus:ring-pepco-blue/40 transition cursor-pointer shrink-0'
+              : 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-pepco-surface hover:bg-pepco-border text-pepco-blueDark border border-pepco-border focus:outline-none focus:ring-2 focus:ring-pepco-blue/40 transition cursor-pointer shrink-0';
+          }, 1600);
+        } else {
+          textSpan.textContent = 'Błąd';
+          setTimeout(() => {
+            textSpan.textContent = labelText;
+          }, 1500);
+        }
+      });
+
+      return btn;
+    }
+
+    // Search history management in localStorage
+    function loadHistory() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (_) {
+        return [];
+      }
+    }
+
+    function saveHistory(items) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(items.slice(0, MAX_HISTORY_ITEMS)));
+      } catch (_) {
+        // Ignore storage quota errors
+      }
+    }
+
+    function recordSearchHistory({ type, digits, subjectName, statusVat }) {
+      const current = loadHistory();
+      const filtered = current.filter((item) => !(item.type === type && item.digits === digits));
+      const entry = {
+        type,
+        digits,
+        display: formatIdentifierForDisplay(digits, type),
+        subjectName: subjectName ? String(subjectName) : '',
+        statusVat: statusVat ? String(statusVat) : '',
+        searchedAt: new Date().toISOString(),
+      };
+      const updated = [entry, ...filtered].slice(0, MAX_HISTORY_ITEMS);
+      saveHistory(updated);
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const items = loadHistory();
+      historyListEl.innerHTML = '';
+
+      if (!items.length) {
+        historySection.classList.add('hidden');
+        return;
+      }
+
+      historySection.classList.remove('hidden');
+
+      items.forEach((item) => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className =
+          'group inline-flex items-center gap-2.5 px-3.5 py-2 rounded-2xl bg-white hover:bg-pepco-surface border border-pepco-border hover:border-pepco-blue text-left shadow-2xs focus:outline-none focus:ring-2 focus:ring-pepco-blue/40 transition cursor-pointer';
+
+        const badge = document.createElement('span');
+        badge.className =
+          item.type === 'nip'
+            ? 'text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-sky-100 text-pepco-blueDark'
+            : 'text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-fuchsia-100 text-pepco-magentaDark';
+        badge.textContent = item.type.toUpperCase();
+
+        const idText = document.createElement('span');
+        idText.className = 'font-mono text-xs font-bold text-slate-900';
+        idText.textContent = item.display;
+
+        chip.appendChild(badge);
+        chip.appendChild(idText);
+
+        if (item.subjectName) {
+          const nameSpan = document.createElement('span');
+          nameSpan.className = 'text-xs font-medium text-slate-600 max-w-[180px] sm:max-w-[240px] truncate';
+          nameSpan.textContent = `— ${item.subjectName}`;
+          chip.appendChild(nameSpan);
         }
 
-        document.getElementById('searchForm').addEventListener('submit', async function(e) {
-            e.preventDefault(); 
-            
-            const searchType = document.getElementById('searchType').value;
-            const searchQuery = document.getElementById('searchQuery').value.replace(/\D/g, ''); 
-            
-            const resultsContainer = document.getElementById('resultsContainer');
-            const resultsContent = document.getElementById('resultsContent');
-            const overlay = document.getElementById('fullScreenLoader');
-            
-            document.body.classList.add('no-scroll');
-            overlay.classList.remove('hidden');
-            overlay.classList.add('flex');
-            resultsContent.classList.add('hidden');
-
-            try {
-                if (searchType === 'nip' && searchQuery.length !== 10) {
-                    throw new Error("Nieprawidłowy format! Numer NIP musi składać się z dokładnie 10 cyfr.");
-                }
-                if (searchType === 'regon' && (searchQuery.length !== 9 && searchQuery.length !== 14)) {
-                    throw new Error("Nieprawidłowy format! Numer REGON musi składać się z 9 lub 14 cyfr.");
-                }
-
-                const today = new Date().toISOString().split('T')[0];
-                const apiUrl = `https://wl-api.mf.gov.pl/api/search/${searchType}/${searchQuery}?date=${today}`;
-
-                let response;
-                try {
-                    response = await fetch(apiUrl);
-                } catch (fetchError) {
-                    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl)}`;
-                    response = await fetch(proxyUrl);
-                }
-
-                if (!response.ok) {
-                    throw new Error("Odmowa dostępu do bazy lub błąd po stronie serwerów Ministerstwa Finansów.");
-                }
-
-                const responseData = await response.json();
-
-                if (!responseData.result || !responseData.result.subject) {
-                    throw new Error("Podmiot nie figuruje w wykazie czynnych podatników VAT na dzień dzisiejszy.");
-                }
-
-                await new Promise(resolve => setTimeout(resolve, 1200));
-
-                const subject = responseData.result.subject;
-                renderResults(subject, responseData.result.requestDateTime);
-                
-                resultsContainer.classList.remove('hidden');
-                resultsContent.classList.remove('hidden');
-            } catch (error) {
-                await new Promise(resolve => setTimeout(resolve, 800));
-
-                resultsContainer.classList.remove('hidden');
-                resultsContent.innerHTML = `
-                <div class="bg-red-50/90 backdrop-blur-sm p-8 rounded-3xl border border-red-200 shadow-xl shadow-red-100/50 flex flex-col md:flex-row items-center gap-6 animate-fade-up"> 
-                    <div class="bg-red-100 p-4 rounded-full text-red-600 shrink-0">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                    </div>
-                    <div>
-                        <h4 class="text-xl font-bold text-red-800 mb-1">Weryfikacja nie powiodła się</h4>
-                        <p class="text-red-700 font-medium">${error.message}</p>
-                    </div>
-                </div>`;
-                resultsContent.classList.remove('hidden');
-            } finally {
-                overlay.classList.add('hidden');
-                overlay.classList.remove('flex');
-                document.body.classList.remove('no-scroll');
-            }
+        chip.addEventListener('click', () => {
+          searchTypeEl.value = item.type;
+          searchQueryEl.value = formatIdentifierForDisplay(item.digits, item.type);
+          updateInputState();
+          executeSearch(item.type, item.digits);
         });
 
-        function renderResults(subject, fetchTime) {
-            const resultsContent = document.getElementById('resultsContent');
-            
-            const address = subject.workingAddress || subject.residenceAddress || '<span class="text-slate-400 italic">Brak adresu w kartotece</span>';
-            const krs = subject.krs || '<span class="text-slate-400 italic">Brak (JDG / Spółka Cywilna)</span>';
-            const isVatActive = subject.statusVat === 'Czynny';
-            const vatBadgeColor = isVatActive ? 'bg-emerald-500 text-white shadow-emerald-500/40' : 'bg-slate-400 text-white shadow-slate-400/40';
+        historyListEl.appendChild(chip);
+      });
+    }
 
-            const iconNip = '<svg class="w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 012-2h2a2 2 0 012 2v1m-6 0a2 2 0 002 2h2a2 2 0 002-2m-6 0V5a2 2 0 012-2h2a2 2 0 012 2v1"></path></svg>';
-            const iconAddress = '<svg class="w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>';
-            const iconBank = '<svg class="w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>';
+    // Safely render error alert box using textContent
+    function renderErrorCard(titleText, detailText, apiCode = '') {
+      resultsContainer.classList.remove('hidden');
+      resultsContent.innerHTML = '';
 
-            let accountsHtml = '';
-            if (subject.accountNumbers && subject.accountNumbers.length > 0) {
-                const accountsItems = subject.accountNumbers.map(acc => `
-                    <div class="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-100 shadow-sm">
-                        <div class="bg-indigo-50 p-2 rounded-lg shrink-0">${iconBank}</div>
-                        <span class="font-mono text-slate-700 tracking-wider font-bold text-sm md:text-base">${formatBankAccount(acc)}</span>
-                    </div>
-                `).join('');
-                
-                accountsHtml = `
-                    <div class="md:col-span-2 mt-2">
-                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                            Rachunki bankowe z białej listy
-                        </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            ${accountsItems}
-                        </div>
-                    </div>
-                `;
-            } else {
-                accountsHtml = `
-                    <div class="md:col-span-2 mt-2">
-                         <div class="p-4 bg-orange-50 text-orange-700 rounded-xl border border-orange-100 flex items-center gap-3 font-medium text-sm">
-                            <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                            Podmiot nie posiada zarejestrowanych rachunków rozliczeniowych.
-                         </div>
-                    </div>
-                `;
-            }
+      const card = document.createElement('div');
+      card.className =
+        'glass-card p-6 sm:p-8 rounded-3xl border border-pepco-magenta/30 shadow-card flex flex-col sm:flex-row items-start sm:items-center gap-5 animate-fade-up';
 
-            resultsContent.innerHTML = `
-                <div class="glass-card rounded-3xl shadow-2xl shadow-indigo-100 border border-white overflow-hidden">
-                    
-                    <div class="p-8 md:p-10 border-b border-slate-100 bg-white/40 relative overflow-hidden">
-                        <div class="absolute -right-20 -top-20 w-64 h-64 bg-indigo-50 rounded-full blur-3xl opacity-60"></div>
-                        
-                        <div class="relative z-10 flex flex-col md:flex-row md:justify-between md:items-start gap-4">
-                            <div>
-                                <p class="text-sm font-bold text-indigo-600 mb-2 tracking-wider uppercase">Karta Podmiotu</p>
-                                <h2 class="text-2xl md:text-4xl font-extrabold text-slate-900 leading-tight">${subject.name}</h2>
-                            </div>
-                            
-                            <div class="shrink-0 mt-2 md:mt-0">
-                                <span class="inline-flex items-center rounded-xl ${vatBadgeColor} px-4 py-2 text-sm font-bold shadow-lg">
-                                    Podatnik VAT: ${subject.statusVat}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="p-8 md:p-10 grid grid-cols-1 md:grid-cols-2 gap-10">
-                        
-                        <div>
-                            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                ${iconNip} Numery Rejestrowe
-                            </h3>
-                            <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm space-y-4">
-                                ${renderRow('Numer NIP', subject.nip)}
-                                ${renderRow('Numer REGON', subject.regon)}
-                                ${renderRow('Numer KRS', krs)}
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                ${iconAddress} Siedziba
-                            </h3>
-                            <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm h-[calc(100%-2rem)] flex flex-col justify-center">
-                                <span class="text-sm text-slate-400 font-medium mb-1">Adres z rejestru:</span>
-                                <span class="text-lg font-bold text-slate-800 leading-snug">${address}</span>
-                            </div>
-                        </div>
-                        
-                        ${accountsHtml}
-                    </div>
-                    
-                    <div class="px-8 py-5 bg-slate-900 text-slate-400 text-xs md:text-sm flex flex-col md:flex-row justify-between items-center gap-3 rounded-b-3xl">
-                        <span class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            Dane pobrane bezpośrednio z API Ministerstwa Finansów
-                        </span>
-                        <span class="font-mono text-slate-500">${fetchTime}</span>
-                    </div>
-                </div>
-            `;
+      const iconBox = document.createElement('div');
+      iconBox.className =
+        'w-14 h-14 rounded-2xl bg-fuchsia-100 text-pepco-magentaDark flex items-center justify-center shrink-0 border border-pepco-magenta/25';
+      iconBox.innerHTML =
+        '<svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>';
+
+      const bodyCol = document.createElement('div');
+      bodyCol.className = 'space-y-1.5 flex-1';
+
+      const titleRow = document.createElement('div');
+      titleRow.className = 'flex flex-wrap items-center gap-2.5';
+
+      const heading = document.createElement('h3');
+      heading.className = 'text-lg sm:text-xl font-extrabold text-slate-900';
+      heading.textContent = titleText;
+      titleRow.appendChild(heading);
+
+      if (apiCode) {
+        const codeTag = document.createElement('span');
+        codeTag.className =
+          'font-mono text-xs font-bold px-2.5 py-0.5 rounded-lg bg-fuchsia-100 text-pepco-magentaDark border border-pepco-magenta/20';
+        codeTag.textContent = `Kod: ${apiCode}`;
+        titleRow.appendChild(codeTag);
+      }
+
+      const msgP = document.createElement('p');
+      msgP.className = 'text-sm sm:text-base font-medium text-slate-700 leading-relaxed';
+      msgP.textContent = detailText;
+
+      bodyCol.appendChild(titleRow);
+      bodyCol.appendChild(msgP);
+
+      card.appendChild(iconBox);
+      card.appendChild(bodyCol);
+      resultsContent.appendChild(card);
+      resultsContent.classList.remove('hidden');
+    }
+
+    // Build a registry row with safe textContent and optional copy button
+    function buildRegistryRow(label, rawValue, copyValue = null) {
+      const row = document.createElement('div');
+      row.className =
+        'flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 border-b border-slate-100 pb-3.5 last:border-0 last:pb-0';
+
+      const leftCol = document.createElement('div');
+      leftCol.className = 'flex flex-col sm:flex-row sm:items-center sm:gap-3 min-w-0';
+
+      const labelSpan = document.createElement('span');
+      labelSpan.className = 'text-xs sm:text-sm font-semibold text-slate-500';
+      labelSpan.textContent = label;
+
+      const hasValue = Boolean(rawValue && String(rawValue).trim() !== '');
+      const valSpan = document.createElement('span');
+      valSpan.className = hasValue
+        ? 'text-sm sm:text-base font-mono font-bold text-slate-900 break-all'
+        : 'text-sm font-medium italic text-slate-400';
+      valSpan.textContent = hasValue ? String(rawValue).trim() : 'Brak w rejestrze';
+
+      leftCol.appendChild(labelSpan);
+      leftCol.appendChild(valSpan);
+      row.appendChild(leftCol);
+
+      if (hasValue && copyValue) {
+        row.appendChild(createCopyButton(copyValue, 'Kopiuj', true));
+      }
+
+      return row;
+    }
+
+    // Safely render full VAT taxpayer result card without HTML injection from API data
+    function renderResults(subject, fetchTime, queryType) {
+      resultsContent.innerHTML = '';
+
+      const card = document.createElement('div');
+      card.className = 'glass-card rounded-3xl shadow-card border border-white overflow-hidden';
+
+      // Top accent bar
+      const topBar = document.createElement('div');
+      topBar.className = 'h-1.5 w-full pepco-gradient-accent';
+      card.appendChild(topBar);
+
+      // Header section
+      const headerSection = document.createElement('div');
+      headerSection.className = 'p-6 sm:p-9 border-b border-slate-200/80 bg-white/65';
+
+      const headerFlex = document.createElement('div');
+      headerFlex.className = 'flex flex-col md:flex-row md:justify-between md:items-start gap-4';
+
+      const titleBlock = document.createElement('div');
+      titleBlock.className = 'min-w-0 flex-1';
+
+      const eyebrow = document.createElement('p');
+      eyebrow.className = 'text-xs font-extrabold text-pepco-blueDark uppercase tracking-widest mb-1.5';
+      eyebrow.textContent = 'Karta podmiotu • Wykaz VAT';
+
+      const nameHeading = document.createElement('h2');
+      nameHeading.className = 'text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 leading-tight break-words';
+      nameHeading.textContent = subject.name ? String(subject.name) : 'Nazwa podmiotu niedostępna';
+
+      titleBlock.appendChild(eyebrow);
+      titleBlock.appendChild(nameHeading);
+
+      // VAT status badge with explicit handling of non-active or missing values
+      const rawStatus = subject.statusVat ? String(subject.statusVat).trim() : '';
+      const normalizedStatus = rawStatus.toLowerCase();
+      const isCzynny = normalizedStatus === 'czynny';
+      const isZwolniony = normalizedStatus.includes('zwoln');
+      const isNieczynny =
+        normalizedStatus.includes('nieczyn') ||
+        normalizedStatus.includes('wykreśl') ||
+        normalizedStatus.includes('odmow');
+
+      const badgeWrap = document.createElement('div');
+      badgeWrap.className = 'shrink-0 flex items-center gap-2';
+
+      const statusPill = document.createElement('span');
+      if (isCzynny) {
+        statusPill.className =
+          'inline-flex items-center gap-2 rounded-2xl bg-emerald-600 text-white px-4 py-2.5 text-sm font-extrabold shadow-md';
+      } else if (isNieczynny) {
+        statusPill.className =
+          'inline-flex items-center gap-2 rounded-2xl bg-pepco-magentaDark text-white px-4 py-2.5 text-sm font-extrabold shadow-md';
+      } else if (isZwolniony) {
+        statusPill.className =
+          'inline-flex items-center gap-2 rounded-2xl bg-amber-500 text-slate-950 px-4 py-2.5 text-sm font-extrabold shadow-md';
+      } else {
+        statusPill.className =
+          'inline-flex items-center gap-2 rounded-2xl bg-slate-200 text-slate-800 px-4 py-2.5 text-sm font-extrabold border border-slate-300';
+      }
+
+      const statusDot = document.createElement('span');
+      statusDot.className = 'w-2.5 h-2.5 rounded-full bg-current opacity-85';
+
+      const statusLabel = document.createElement('span');
+      statusLabel.textContent = rawStatus ? `Status VAT: ${rawStatus}` : 'Status VAT: Brak danych w wykazie';
+
+      statusPill.appendChild(statusDot);
+      statusPill.appendChild(statusLabel);
+      badgeWrap.appendChild(statusPill);
+
+      headerFlex.appendChild(titleBlock);
+      headerFlex.appendChild(badgeWrap);
+      headerSection.appendChild(headerFlex);
+      card.appendChild(headerSection);
+
+      // Details grid
+      const gridSection = document.createElement('div');
+      gridSection.className = 'p-6 sm:p-9 grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8';
+
+      // Column 1: Registry numbers (NIP, REGON, KRS)
+      const regCol = document.createElement('div');
+      const regTitle = document.createElement('h3');
+      regTitle.className = 'text-xs font-extrabold text-pepco-blueDark uppercase tracking-widest mb-3.5 flex items-center gap-2';
+      regTitle.innerHTML =
+        '<svg class="w-4 h-4 text-pepco-magenta shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>';
+      const regTitleText = document.createElement('span');
+      regTitleText.textContent = 'Numery rejestrowe';
+      regTitle.appendChild(regTitleText);
+
+      const regBox = document.createElement('div');
+      regBox.className = 'bg-white rounded-2xl p-5 border border-pepco-border shadow-2xs space-y-3.5';
+
+      const cleanNip = subject.nip ? String(subject.nip).replace(/\D/g, '') : '';
+      const formattedNip = cleanNip.length === 10 ? formatIdentifierForDisplay(cleanNip, 'nip') : (subject.nip || '');
+      regBox.appendChild(buildRegistryRow('Numer NIP', formattedNip, cleanNip || formattedNip));
+
+      const cleanRegon = subject.regon ? String(subject.regon).replace(/\D/g, '') : '';
+      regBox.appendChild(buildRegistryRow('Numer REGON', subject.regon || '', cleanRegon || subject.regon));
+
+      const cleanKrs = subject.krs ? String(subject.krs).trim() : '';
+      regBox.appendChild(buildRegistryRow('Numer KRS', cleanKrs, cleanKrs));
+
+      regCol.appendChild(regTitle);
+      regCol.appendChild(regBox);
+
+      // Column 2: Address
+      const addrCol = document.createElement('div');
+      const addrTitle = document.createElement('h3');
+      addrTitle.className = 'text-xs font-extrabold text-pepco-blueDark uppercase tracking-widest mb-3.5 flex items-center gap-2';
+      addrTitle.innerHTML =
+        '<svg class="w-4 h-4 text-pepco-magenta shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>';
+      const addrTitleText = document.createElement('span');
+      addrTitleText.textContent = 'Siedziba i adres rejestrowy';
+      addrTitle.appendChild(addrTitleText);
+
+      const addrBox = document.createElement('div');
+      addrBox.className =
+        'bg-white rounded-2xl p-5 border border-pepco-border shadow-2xs min-h-[156px] flex flex-col justify-between gap-4';
+
+      const rawAddress = subject.workingAddress || subject.residenceAddress || '';
+      const hasAddress = Boolean(String(rawAddress).trim());
+
+      const addrCaption = document.createElement('span');
+      addrCaption.className = 'text-xs font-semibold uppercase tracking-wider text-slate-400';
+      addrCaption.textContent = subject.workingAddress
+        ? 'Adres stałego miejsca prowadzenia działalności'
+        : subject.residenceAddress
+          ? 'Adres siedziby / zamieszkania'
+          : 'Adres';
+
+      const addrValue = document.createElement('p');
+      addrValue.className = hasAddress
+        ? 'text-base sm:text-lg font-bold text-slate-900 leading-snug'
+        : 'text-sm font-medium italic text-slate-400';
+      addrValue.textContent = hasAddress ? String(rawAddress).trim() : 'Brak adresu w kartotece';
+
+      const addrTop = document.createElement('div');
+      addrTop.className = 'space-y-1.5';
+      addrTop.appendChild(addrCaption);
+      addrTop.appendChild(addrValue);
+      addrBox.appendChild(addrTop);
+
+      if (hasAddress) {
+        const addrFooter = document.createElement('div');
+        addrFooter.className = 'flex justify-end';
+        addrFooter.appendChild(createCopyButton(String(rawAddress).trim(), 'Kopiuj adres', true));
+        addrBox.appendChild(addrFooter);
+      }
+
+      addrCol.appendChild(addrTitle);
+      addrCol.appendChild(addrBox);
+
+      gridSection.appendChild(regCol);
+      gridSection.appendChild(addrCol);
+
+      // Bank accounts section spanning full width
+      const bankSection = document.createElement('div');
+      bankSection.className = 'md:col-span-2 pt-1';
+
+      const bankHeading = document.createElement('h3');
+      bankHeading.className = 'text-xs font-extrabold text-pepco-blueDark uppercase tracking-widest mb-3.5 flex items-center justify-between gap-2';
+
+      const bankHeadingLeft = document.createElement('span');
+      bankHeadingLeft.className = 'flex items-center gap-2';
+      bankHeadingLeft.innerHTML =
+        '<svg class="w-4 h-4 text-pepco-magenta shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>';
+      const bankHeadingLabel = document.createElement('span');
+      bankHeadingLabel.textContent = 'Rachunki bankowe z białej listy';
+      bankHeadingLeft.appendChild(bankHeadingLabel);
+
+      const accounts = Array.isArray(subject.accountNumbers) ? subject.accountNumbers : [];
+      const bankCount = document.createElement('span');
+      bankCount.className =
+        'font-mono text-xs font-bold px-2.5 py-0.5 rounded-full bg-pepco-surface text-pepco-blueDark border border-pepco-border';
+      bankCount.textContent = `${accounts.length}`;
+
+      bankHeading.appendChild(bankHeadingLeft);
+      bankHeading.appendChild(bankCount);
+      bankSection.appendChild(bankHeading);
+
+      if (accounts.length > 0) {
+        const accountsGrid = document.createElement('div');
+        accountsGrid.className = 'grid grid-cols-1 lg:grid-cols-2 gap-3.5';
+
+        accounts.forEach((acc) => {
+          const formattedAcc = formatBankAccount(acc);
+          const cleanAcc = String(acc || '').replace(/\D/g, '') || formattedAcc;
+
+          const accCard = document.createElement('div');
+          accCard.className =
+            'flex items-center justify-between gap-3 p-4 bg-white rounded-2xl border border-pepco-border hover:border-pepco-blue/60 shadow-2xs transition';
+
+          const accLeft = document.createElement('div');
+          accLeft.className = 'flex items-center gap-3 min-w-0';
+
+          const accIcon = document.createElement('div');
+          accIcon.className =
+            'w-9 h-9 rounded-xl bg-pepco-surface text-pepco-blueDark border border-pepco-border flex items-center justify-center font-mono text-xs font-extrabold shrink-0';
+          accIcon.textContent = 'PL';
+
+          const accNum = document.createElement('span');
+          accNum.className = 'font-mono text-xs sm:text-sm font-bold text-slate-900 tracking-wide break-all';
+          accNum.textContent = formattedAcc;
+
+          accLeft.appendChild(accIcon);
+          accLeft.appendChild(accNum);
+
+          accCard.appendChild(accLeft);
+          accCard.appendChild(createCopyButton(cleanAcc, 'Kopiuj', true));
+          accountsGrid.appendChild(accCard);
+        });
+
+        bankSection.appendChild(accountsGrid);
+      } else {
+        const emptyBank = document.createElement('div');
+        emptyBank.className =
+          'p-4 bg-pepco-surface text-slate-700 rounded-2xl border border-pepco-border flex items-center gap-3 font-medium text-sm';
+        emptyBank.textContent = 'Podmiot nie posiada zarejestrowanych rachunków rozliczeniowych na białej liście.';
+        bankSection.appendChild(emptyBank);
+      }
+
+      gridSection.appendChild(bankSection);
+      card.appendChild(gridSection);
+
+      // Footer metadata bar
+      const footerBar = document.createElement('div');
+      footerBar.className =
+        'px-6 sm:px-9 py-4 bg-slate-900 text-slate-300 text-xs sm:text-sm flex flex-col sm:flex-row justify-between items-center gap-2.5';
+
+      const footerLeft = document.createElement('span');
+      footerLeft.className = 'flex items-center gap-2 text-center sm:text-left';
+      footerLeft.innerHTML =
+        '<svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>';
+      const footerLeftText = document.createElement('span');
+      footerLeftText.textContent = `Dane pobrane z API Ministerstwa Finansów (${queryType.toUpperCase()})`;
+      footerLeft.appendChild(footerLeftText);
+
+      const footerRight = document.createElement('span');
+      footerRight.className = 'font-mono text-xs text-slate-400';
+      footerRight.textContent = fetchTime ? String(fetchTime) : new Date().toISOString();
+
+      footerBar.appendChild(footerLeft);
+      footerBar.appendChild(footerRight);
+      card.appendChild(footerBar);
+
+      resultsContent.appendChild(card);
+    }
+
+    // Set form disabled state during active lookup
+    function setFormBusy(isBusy) {
+      submitBtn.disabled = isBusy;
+      searchTypeEl.disabled = isBusy;
+      searchQueryEl.disabled = isBusy;
+      clearQueryBtn.disabled = isBusy;
+      document.querySelectorAll('.sample-btn').forEach((btn) => {
+        btn.disabled = isBusy;
+      });
+    }
+
+    // Main search workflow
+    async function executeSearch(searchType, rawDigits) {
+      const searchQuery = String(rawDigits || '').replace(/\D/g, '');
+
+      setFormBusy(true);
+      document.body.classList.add('no-scroll');
+      overlay.classList.remove('hidden');
+      overlay.classList.add('flex');
+      resultsContent.classList.add('hidden');
+
+      try {
+        if (searchType === 'nip' && searchQuery.length !== 10) {
+          throw {
+            title: 'Nieprawidłowy numer NIP',
+            message: 'Numer NIP musi składać się z dokładnie 10 cyfr.',
+          };
+        }
+        if (searchType === 'regon' && searchQuery.length !== 9 && searchQuery.length !== 14) {
+          throw {
+            title: 'Nieprawidłowy numer REGON',
+            message: 'Numer REGON musi składać się z 9 lub 14 cyfr.',
+          };
         }
 
-        function renderRow(label, value) {
-            return `
-                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center border-b border-slate-100 pb-3 last:border-0 last:pb-0">
-                    <span class="text-sm text-slate-500 font-medium mb-1 sm:mb-0">${label}</span>
-                    <span class="text-base font-bold text-slate-900">${value}</span>
-                </div>
-            `;
+        const today = new Date().toISOString().split('T')[0];
+        const apiUrl = `https://wl-api.mf.gov.pl/api/search/${searchType}/${searchQuery}?date=${today}`;
+
+        let response;
+        try {
+          response = await fetch(apiUrl, { headers: { Accept: 'application/json' } });
+        } catch (_networkError) {
+          const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl)}`;
+          response = await fetch(proxyUrl);
         }
-    </script>
+
+        let responseData = null;
+        try {
+          responseData = await response.json();
+        } catch (_jsonError) {
+          throw {
+            title: 'Błąd odpowiedzi API',
+            message: `Serwer zwrócił nieprawidłowy format danych (HTTP ${response.status}).`,
+            code: `HTTP ${response.status}`,
+          };
+        }
+
+        // Check explicit API error payload (wl-api.mf.gov.pl returns { code, message } on errors)
+        if (responseData && (responseData.code || responseData.message) && !responseData.result) {
+          throw {
+            title: 'Komunikat wykazu VAT (MF)',
+            message: String(responseData.message || 'Odmowa dostępu lub nieprawidłowe zapytanie do API.'),
+            code: responseData.code ? String(responseData.code) : `HTTP ${response.status}`,
+          };
+        }
+
+        if (!response.ok) {
+          throw {
+            title: 'Błąd połączenia z API',
+            message: `Serwer Ministerstwa Finansów zwrócił błąd HTTP ${response.status}. Spróbuj ponownie za chwilę.`,
+            code: `HTTP ${response.status}`,
+          };
+        }
+
+        if (!responseData || !responseData.result || !responseData.result.subject) {
+          throw {
+            title: 'Brak podmiotu w bazie',
+            message: 'Podmiot o podanym identyfikatorze nie figuruje w wykazie podatników VAT na dzień dzisiejszy.',
+          };
+        }
+
+        const subject = responseData.result.subject;
+        const requestDateTime = responseData.result.requestDateTime || new Date().toISOString();
+
+        renderResults(subject, requestDateTime, searchType);
+        recordSearchHistory({
+          type: searchType,
+          digits: searchQuery,
+          subjectName: subject.name || '',
+          statusVat: subject.statusVat || '',
+        });
+
+        resultsContainer.classList.remove('hidden');
+        resultsContent.classList.remove('hidden');
+      } catch (err) {
+        const title = err && err.title ? err.title : 'Weryfikacja nie powiodła się';
+        const message =
+          err && err.message
+            ? err.message
+            : err instanceof Error
+              ? err.message
+              : 'Wystąpił nieoczekiwany błąd podczas weryfikacji podmiotu.';
+        const code = err && err.code ? err.code : '';
+        renderErrorCard(title, message, code);
+      } finally {
+        overlay.classList.add('hidden');
+        overlay.classList.remove('flex');
+        document.body.classList.remove('no-scroll');
+        setFormBusy(false);
+      }
+    }
+
+    // Event listeners
+    searchTypeEl.addEventListener('change', () => {
+      const digits = searchQueryEl.value.replace(/\D/g, '');
+      if (searchTypeEl.value === 'nip' && digits.length > 10) {
+        searchQueryEl.value = digits.slice(0, 10);
+      }
+      updateInputState();
+      searchQueryEl.focus();
+    });
+
+    searchQueryEl.addEventListener('input', updateInputState);
+
+    clearQueryBtn.addEventListener('click', () => {
+      searchQueryEl.value = '';
+      updateInputState();
+      searchQueryEl.focus();
+    });
+
+    document.querySelectorAll('.sample-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const sampleType = btn.getAttribute('data-sample-type') || 'nip';
+        const sampleValue = btn.getAttribute('data-sample-value') || '';
+        searchTypeEl.value = sampleType;
+        searchQueryEl.value = formatIdentifierForDisplay(sampleValue, sampleType);
+        updateInputState();
+      });
+    });
+
+    clearHistoryBtn.addEventListener('click', () => {
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+      } catch (_) {
+        // Ignore storage errors
+      }
+      renderHistory();
+    });
+
+    searchForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const searchType = searchTypeEl.value;
+      const digits = searchQueryEl.value.replace(/\D/g, '');
+      executeSearch(searchType, digits);
+    });
+
+    // Initialize on load
+    window.addEventListener('DOMContentLoaded', () => {
+      updateInputState();
+      renderHistory();
+    });
+  </script>
 </body>
 </html>
